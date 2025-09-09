@@ -44,3 +44,13 @@ target_link_libraries(meetnotes PRIVATE
   ${PORTAUDIO_LIB} 
   ${SNDFILE_LIBRARIES} 
   ${CURL_LIBRARY})
+
+# Windows-specific WASAPI libraries
+if(WIN32)
+  target_link_libraries(meetnotes PRIVATE
+    ole32
+    oleaut32
+    mmdevapi
+    audioclient
+    avrt)
+endif()

@@ -66,3 +66,9 @@ deps/**/*.zip
 deps/**/*.tgz
 deps/**/*.tar.gz
 deps/**/*.7z
+
+# Environment files with API keys
+.env
+.env.local
+.env.production
+*.key

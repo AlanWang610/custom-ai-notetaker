@@ -25,7 +25,8 @@ custom-ai-notetaker/
 ├── CMakeLists.txt          # ✅ Updated for local dependencies
 ├── src/main.cpp            # ✅ Full implementation ready
 ├── models/
-│   └── ggml-base.en.bin   # ✅ Whisper model (142MB)
+│   ├── ggml-base.en.bin        # ✅ Whisper model (142MB)
+│   └── ggml-small.en-tdrz.bin  # ✅ TinyDiarize model (465MB) - Default
 ├── deps/                  # ✅ Manual dependencies
 │   ├── portaudio/
 │   ├── libsndfile/
@@ -62,21 +63,73 @@ custom-ai-notetaker/
 ## ▶️ Running the Application
 
 1. **Set your OpenAI API key:**
+
+   **Option A: Using .env file (Recommended - Secure):**
+   ```powershell
+   # The .env file is already created with your API key
+   # Just make sure it exists and contains:
+   # OPENAI_API_KEY=your_key_here
+   ```
+   
+   **Option B: Using environment variable:**
    ```powershell
    $env:OPENAI_API_KEY="sk-your-api-key-here"
    ```
 
 2. **Run the application:**
+
+   **For capturing system audio with speaker diarization (recommended):**
    ```powershell
-   .\Release\meetnotes.exe --model ../models/ggml-base.en.bin --seconds 600
+   .\Release\meetnotes.exe --loopback --seconds 600
+   ```
+   
+   **For traditional microphone recording with speaker diarization:**
+   ```powershell
+   .\Release\meetnotes.exe --seconds 600
+   ```
+   
+   **Using non-diarization model:**
+   ```powershell
+   .\Release\meetnotes.exe --loopback --model ../models/ggml-base.en.bin --seconds 600
    ```
 
 ## 📋 Available Options
 
-- `--model`: Path to Whisper model file (required)
+- `--model`: Path to Whisper model file (default: models/ggml-small.en-tdrz.bin with diarization)
 - `--seconds`: Recording duration in seconds (default: 600)
-- `--device`: Audio input device substring
+- `--loopback`: **NEW!** Use WASAPI loopback to capture system audio (Windows only)
+- `--device`: Audio input device substring (PortAudio mode only)
 - `--out`: Output audio file path
+
+## 🎤 **WASAPI Loopback Mode**
+
+The new `--loopback` option uses Windows WASAPI to capture the exact audio playing through your speakers. Perfect for:
+
+- **Recording online meetings** (Zoom, Teams, Google Meet)
+- **Capturing webinars or presentations**
+- **Recording any system audio**
+- **Perfect quality** without background noise or echo
+
+## 🎙️ **Speaker Diarization (TinyDiarize)**
+
+By default, the application now uses the **TinyDiarize model** (`ggml-small.en-tdrz.bin`) which provides:
+
+- **Speaker identification**: Automatically detects "who spoke when"
+- **Speaker segmentation**: Separates transcript by speaker
+- **Professional output**: Clear speaker attribution in transcripts
+
+**Example Output:**
+```
+Speaker 1: Welcome everyone to today's meeting. Let's start by reviewing the quarterly results.
+Speaker 2: Thank you for having me. I'd like to present our sales figures first.
+Speaker 1: That sounds great. Please go ahead.
+```
+
+**Example:**
+```powershell
+# Record a 10-minute meeting with WASAPI loopback and speaker diarization
+.\Release\meetnotes.exe --loopback --seconds 600 --out meeting.wav
+```
 
 ## 🔧 CMake Configuration
 
@@ -100,9 +153,10 @@ The `.gitignore` has been configured to:
 1. Build the project using the steps above
 2. Test with a short recording first
 3. Adjust model size based on your needs:
-   - `tiny.en` (75MB) - Fastest, basic quality
-   - `base.en` (142MB) - Good balance ⭐ (current)
-   - `small.en` (466MB) - Better quality
+   - `tiny.en` (75MB) - Fastest, basic quality, no diarization
+   - `base.en` (142MB) - Good balance, no diarization  
+   - `small.en-tdrz` (465MB) - Best for meetings ⭐ (current, with diarization)
+   - `medium.en` (1.5GB) - Highest quality, no diarization
 
 ## 🐛 Troubleshooting
 
@@ -112,9 +166,14 @@ The `.gitignore` has been configured to:
 - Try building whisper.cpp separately first
 
 **Runtime Issues:**
-- Verify OpenAI API key is set
+- Verify OpenAI API key is set (check .env file or environment variable)
 - Check that model file exists and is accessible
 - Ensure audio input device is available
+
+**API Key Issues:**
+- Make sure .env file exists in project root
+- Verify .env file contains: `OPENAI_API_KEY=your_actual_key`
+- Check that .env file is not corrupted or has extra spaces
 
 **Library Issues:**
 - Make sure DLL files are in PATH or copy them to executable directory
