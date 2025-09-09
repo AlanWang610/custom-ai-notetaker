@@ -1,0 +1,753 @@
+commit 45ac57609bc21cef2463f46258d28a4dc0623333
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-09-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-09-02
+
+    Update manual pages
+
+commit 3190d030f7aa0338a196975580cfffb1040e7e69
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-09-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-09-02
+
+    Bump package and library versions
+
+commit 6979a07da697203849d539a201686e447c77187a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-09-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-09-02
+
+    Update AUTHORS
+
+commit 768e383662548a9b938c1b70a175d843ff4acde3
+Merge: 54359802 6fd2f9e0
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-09-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-09-02
+
+    Merge pull request #2503 from nghttp2/bump-ngtcp2
+    
+    Bump ngtcp2 to v1.15.1
+
+commit 6fd2f9e027af20f3fa960f64d3e34dcaf3ade5d4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-09-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-09-02
+
+    Bump ngtcp2 to v1.15.1
+
+commit 54359802faf48c4ff5cb3c13eafca06c686c7949
+Merge: 3ae75e84 bc57689f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-09-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-09-02
+
+    Merge pull request #2500 from bmarques1995/master
+    
+    Added nghttp3's pattern targets
+
+commit bc57689f173c76af8ba0934d8b1b889d9ad7aeea
+Author:     bmarques1995 <testebash@outlook.com>
+AuthorDate: 2025-08-31
+Commit:     bmarques1995 <testebash@outlook.com>
+CommitDate: 2025-09-01
+
+    Added nghttp3's pattern targets
+
+commit 3ae75e840e3bb01f8bdaeb1fc91fdd7c4aa8ce09
+Merge: 4c10abe9 7f79fbfa
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-31
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-31
+
+    Merge pull request #2499 from nghttp2/bump-libbpf
+    
+    Bump libbpf to v1.6.2
+
+commit 7f79fbfa3e355e8436c11e3bce59b785f91df18d
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-31
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-31
+
+    Bump libbpf to v1.6.2
+
+commit 4c10abe99e41659af6bca22714d6faa706c800cf
+Merge: f266ee50 2fed8b49
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-30
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-30
+
+    Merge pull request #2497 from nghttp2/test-lib-before-app
+    
+    Test lib before building applications
+
+commit 2fed8b49453751d10193736327ad902d4625ca2d
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-30
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-30
+
+    Test lib before building applications
+
+commit f266ee500ddd714a85c1eedcad0a9085299d146d
+Merge: 708912fe f90a8016
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-30
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-30
+
+    Merge pull request #2496 from nghttp2/quic-padding
+    
+    src: Adopt NGTCP2_WRITE_STREAM_FLAG_PADDING
+
+commit 708912fe20cabe4668b50f45c6afe3892066785c
+Merge: bd70a154 107b7814
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-30
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-30
+
+    Merge pull request #2495 from nghttp2/constexpr-fixup
+    
+    src: constexpr fixup
+
+commit f90a80160999cad6119fe4ddc0ea43b5244ad7fa
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-30
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-30
+
+    src: Adopt NGTCP2_WRITE_STREAM_FLAG_PADDING
+    
+    Adopt NGTCP2_WRITE_STREAM_FLAG_PADDING to increase opportunities for
+    GSO.
+
+commit 107b7814faac4284a7b384eb68d222d19577b410
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-30
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-30
+
+    src: constexpr fixup
+    
+    - Use inline constexpr for constexpr variable with external linkage
+    - Use static constexpr where they should
+    - Use consteval for functions to generate a lookup table
+
+commit bd70a1546c6f882b2f2c8feb5352699596dc5819
+Merge: ea28e672 6e660ddc
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-26
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-26
+
+    Merge pull request #2494 from nghttp2/src-designated-initializers
+    
+    src: Adopt designated initializers
+
+commit 6e660ddc4b63e31fe96dc13319106fca353bf30a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-26
+
+    src: Adopt designated initializers
+
+commit ea28e672ae316536f37536b517b9057bce1ccfcf
+Merge: 62c12b67 fe8685e3
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-25
+
+    Merge pull request #2493 from nghttp2/ngtcp2-callback-designated-init
+    
+    src: Adopt designated initializers for ngtcp2_callbacks
+
+commit fe8685e37faaa0e4f50588c17f778f6749371a52
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-25
+
+    src: Adopt designated initializers for ngtcp2_callbacks
+
+commit 62c12b673b3039a3883285812e283157414dd5ba
+Merge: f9f5db5b 9ba0b7fd
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-25
+
+    Merge pull request #2492 from nghttp2/ngtcp2-crypto-libressl
+    
+    Adopt libngtcp2_crypto_libressl changes
+
+commit 9ba0b7fde00ef576b42966abfbc5af9ba830b853
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-25
+
+    Adopt libngtcp2_crypto_libressl changes
+
+commit f9f5db5b6afc64e6f8c6755ff61393b219b3433d
+Merge: 8f5b4502 7ef3a91d
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-24
+
+    Merge pull request #2491 from nghttp2/adopt-ngtcp2-nghttp3-features
+    
+    Adopt ngtcp2 nghttp3 features
+
+commit 7ef3a91d9b03284b5681cda07c7ef8b5c5d9b1fd
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-24
+
+    src: Adopt ngtcp2_conn_write_aggregate_pkt, require ngtcp2 >= v1.15.0
+
+commit e435050378f6208d1998cd6b0acde8b009085c8a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-24
+
+    src: Specify nghttp3_rand callback, require nghttp3 >= v1.11.0
+
+commit 8f5b450237a9f99f726cc0cb4210e6c45455061e
+Merge: fd48570e 5f5fdc78
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-24
+
+    Merge pull request #2490 from nghttp2/bump-ngtcp2
+    
+    Bump ngtcp2 and its dependencies
+
+commit 5f5fdc780fe15163f9156b9aaf2c72ef1304d861
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-24
+
+    Bump ngtcp2 and its dependencies
+
+commit fd48570e7f1cf1fe1b0886ab9c5a51203ad8ae0b
+Merge: 451853f3 daa4260f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-24
+
+    Merge pull request #2489 from nghttp2/fix-test-assertions
+    
+    tests: Swap the positions of expected and actual values
+
+commit daa4260f61e7b3658dd82300c930c5cb1a1642f4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-24
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-24
+
+    tests: Swap the positions of expected and actual values
+
+commit 451853f39b1cf78e5b6e5aafdba89774c7a2614f
+Merge: 5d4d5175 dfab53ef
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-24
+
+    Merge pull request #2488 from nghttp2/configurable-glitch-counter
+    
+    Make glitch counter configurable
+
+commit dfab53ef659340afb2735fb12e23f3d83a4c399c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-23
+
+    Make glitch counter configurable
+
+commit 5d4d517535a077fd9fda28b7724125d508de21d5
+Merge: 2e84de0b c36b8ee8
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-23
+
+    Merge pull request #2487 from nghttp2/gha-bump-clang
+    
+    GHA: Bump clang to 19
+
+commit c36b8ee88a30e7e0b54fa6e3f9db86b8270fc9ea
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-23
+
+    GHA: Bump clang to 19
+
+commit 2e84de0be9463e305b9a341ef46381a350e35896
+Merge: 4890cb0f e18beaa3
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-23
+
+    Merge pull request #2486 from nghttp2/bump-clang-format
+    
+    Bump clang-format to 19
+
+commit e18beaa3bdaacd457ab893a26413d1376d1df30c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-23
+
+    Bump clang-format to 19
+
+commit 4890cb0fb876548c44413ba13158f474f6a071dc
+Merge: 56d5406b 06fb688b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-23
+
+    Merge pull request #2485 from nghttp2/glitch-counter
+    
+    Add "glitch" counter
+
+commit 06fb688be2c41206f8012f1d3149ba862d21a631
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-06-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-23
+
+    Add "glitch" counter
+    
+    Any suspicious activity such as DATA frames to a stream which does not
+    exist are counted to so called "glitch" counter.  If it increases more
+    than the configured rate, GOAWAY is sent and the connection is closed.
+
+commit 56d5406bcee92e2528d8b632cbd6cb6cf9569e4e
+Merge: 0196b2cc de7da994
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-19
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-19
+
+    Merge pull request #2483 from nghttp2/dependabot/go_modules/golang.org/x/net-0.43.0
+    
+    Bump golang.org/x/net from 0.42.0 to 0.43.0
+
+commit 0196b2cc03172f54c51213d3ad85d16afd0a9766
+Merge: 6d7f80ed 40124de4
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-19
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-19
+
+    Merge pull request #2482 from nghttp2/dependabot/github_actions/actions/checkout-5
+    
+    Bump actions/checkout from 4 to 5
+
+commit de7da994535b2e5b10b712b2becbc950a7ceb24c
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-08-18
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-18
+
+    Bump golang.org/x/net from 0.42.0 to 0.43.0
+    
+    Bumps [golang.org/x/net](https://github.com/golang/net) from 0.42.0 to 0.43.0.
+    - [Commits](https://github.com/golang/net/compare/v0.42.0...v0.43.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: golang.org/x/net
+      dependency-version: 0.43.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 40124de4006e49a7c1546e37879ca58a7d750905
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-08-18
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-18
+
+    Bump actions/checkout from 4 to 5
+    
+    Bumps [actions/checkout](https://github.com/actions/checkout) from 4 to 5.
+    - [Release notes](https://github.com/actions/checkout/releases)
+    - [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/actions/checkout/compare/v4...v5)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/checkout
+      dependency-version: '5'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 6d7f80ed7f0db2ef5a6779784c1b3c248bd38623
+Merge: e434b74e 7bf98f27
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-18
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-18
+
+    Merge pull request #2481 from nghttp2/fix-doc
+    
+    Update doc
+
+commit 7bf98f272980fd0fef951bc0cfc76fb3a6957707
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-17
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-17
+
+    Update doc
+
+commit e434b74e5065d96eceaf074e121a7e8f3f35fd9e
+Merge: 8391ae7a 7784fa97
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-17
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-17
+
+    Merge pull request #2480 from nghttp2/robust-error-handling
+    
+    Make error handling robust
+
+commit 7784fa979d0bcf801a35f1afbb25fb048d815cd7
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-17
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-17
+
+    Make error handling robust
+    
+    Stream errors are now promoted to connection errors.  This means that
+    an event that previously just resets a single stream now closes a
+    connection entirely.  The promoted errors are mostly implementation
+    errors.  Some involve HTTP fields, but they are already treated stream
+    error.  People who care about that should have already raised any
+    issues.  We do not have any outstanding related issues now, so it
+    seems OK to treat it as connection error.
+    
+    We have some contradictory specifications around
+    nghttp2_on_invalid_header and nghttp2_on_invalid_header2 callbacks.
+    nghttp2_on_invalid_header says that if it is omitted, a stream is
+    reset.  Meanwhile, nghttp2_on_invalid_header2 says that if it is
+    omitted, invalid field is silently ignored.  In actual implementation,
+    if both omitted, we treat it as stream error.  In practice, it is
+    often required not to bail out if invalid header is received.  In this
+    change, if both callbacks are omitted, invalid field is silently
+    ignored as the documentation of nghttp2_on_invalid_header2 says.  The
+    connection error promotion is applied here as well.  So if invalid
+    field is received, and callback returns
+    NGHTTP2_ERR_TEMPORAL_CALLBACK_FAILURE, it is treated as connection
+    error.
+
+commit 8391ae7a574df38eeb65c53a6b4744c0d71f41bb
+Merge: d8d94e7a d63d2568
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-08-09
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-08-09
+
+    Merge pull request #2478 from nghttp2/fix-gha-android-build
+    
+    GHA: Run android workflow on branches event
+
+commit d63d2568b7580b25e21d529406ba2a34045616c6
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-09
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-09
+
+    GHA: Run android workflow on branches event
+
+commit d8d94e7a6916db1bd14243799fe933965bfe7dd7
+Merge: 52ae8b7d ef3b25e1
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-29
+
+    Merge pull request #2475 from nghttp2/rewrite-is_hex_string
+    
+    src: Rewrite util::is_hex_string
+
+commit ef3b25e152e16f680a18670fb756c9f6b0d988e9
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-07-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-07-29
+
+    src: Rewrite util::is_hex_string
+
+commit 52ae8b7d9f5629755ca359ccf818e97726c30af5
+Merge: 32a5793b d204cd08
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-25
+
+    Merge pull request #2474 from nghttp2/mem-free
+    
+    lib: Use nghttp2_mem_free
+
+commit d204cd08805ede91d240fc19535e739a5f24acc5
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-07-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-07-25
+
+    lib: Use nghttp2_mem_free
+
+commit 32a5793b0238358b35102983c2850a17932aa06e
+Merge: b81979f3 808271a5
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-25
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-25
+
+    Merge pull request #2473 from geoffhill/patch-1
+    
+    Use allocator-aware free in failure path
+
+commit b81979f35b5b04a5399309a0f69a279190784b2e
+Merge: 2fefe482 4bfd528d
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-24
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-24
+
+    Merge pull request #2472 from nghttp2/dependabot/go_modules/github.com/quic-go/quic-go-0.54.0
+    
+    Bump github.com/quic-go/quic-go from 0.53.0 to 0.54.0
+
+commit 808271a5a977850cfb8b6a2d324f2f57851ba23d
+Author:     Geoff Hill <geoff@geoffhill.org>
+AuthorDate: 2025-07-23
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-23
+
+    Use allocator-aware free in failure path
+    
+    This change avoids free(3) from stdlib in favor of nghttp2_mem_free() for freeing a buffer in an error path. The buffer is allocated with nghttp2_mem_malloc().
+
+commit 4bfd528d442b4b2ba85d84d3af30826cafdada02
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-07-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-21
+
+    Bump github.com/quic-go/quic-go from 0.53.0 to 0.54.0
+    
+    Bumps [github.com/quic-go/quic-go](https://github.com/quic-go/quic-go) from 0.53.0 to 0.54.0.
+    - [Release notes](https://github.com/quic-go/quic-go/releases)
+    - [Commits](https://github.com/quic-go/quic-go/compare/v0.53.0...v0.54.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: github.com/quic-go/quic-go
+      dependency-version: 0.54.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 2fefe482bf7d8118f5adc54de608701bb8abc432
+Merge: 5edfa62c 1c2ba03f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-16
+
+    Merge pull request #2471 from nghttp2/dependabot/go_modules/golang.org/x/net-0.42.0
+    
+    Bump golang.org/x/net from 0.41.0 to 0.42.0
+
+commit 1c2ba03f946062820251c0bf8396058a9c38edb1
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-07-14
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-14
+
+    Bump golang.org/x/net from 0.41.0 to 0.42.0
+    
+    Bumps [golang.org/x/net](https://github.com/golang/net) from 0.41.0 to 0.42.0.
+    - [Commits](https://github.com/golang/net/compare/v0.41.0...v0.42.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: golang.org/x/net
+      dependency-version: 0.42.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 5edfa62c7b374e420e13c6e7fa97ef665c38d675
+Merge: efad89d9 b41ca012
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-01
+
+    Merge pull request #2468 from nghttp2/dependabot/go_modules/github.com/quic-go/quic-go-0.53.0
+    
+    Bump github.com/quic-go/quic-go from 0.52.0 to 0.53.0
+
+commit efad89d9d2e5539f65f3ceb566420f733438ceff
+Merge: d2b58bd0 a8dfe825
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-07-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-07-01
+
+    Merge pull request #2469 from nghttp2/map-seed
+    
+    Map seed
+
+commit a8dfe825d08aad0937e72028ef9251dad02d8b4e
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-07-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-07-01
+
+    src: Specify nghttp2_rand_callback
+
+commit a9b0230e57279bdcec49204f5638f9723c2c9538
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-07-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-07-01
+
+    Add nghttp2_rand_callback
+    
+    Add nghttp2_rand_callback.  Seed nghttp2_map with the unpredictable
+    value from the callback.
+
+commit 01b16f64f4fe750ee0a0bc30fcad592ec12cccf0
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-07-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-07-01
+
+    Port ngtcp2_map changes
+
+commit b41ca012b4439c0b7a10ad5b2d3846f4eb62bdec
+Author:     dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+AuthorDate: 2025-06-30
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-06-30
+
+    Bump github.com/quic-go/quic-go from 0.52.0 to 0.53.0
+    
+    Bumps [github.com/quic-go/quic-go](https://github.com/quic-go/quic-go) from 0.52.0 to 0.53.0.
+    - [Release notes](https://github.com/quic-go/quic-go/releases)
+    - [Commits](https://github.com/quic-go/quic-go/compare/v0.52.0...v0.53.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: github.com/quic-go/quic-go
+      dependency-version: 0.53.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit d2b58bd0cd12eba1dc0faa6a3d191cbc0a76bca4
+Merge: 1616d9ef fc43fc18
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-06-29
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-06-29
+
+    Merge pull request #2467 from nghttp2/pmtudisc-probe
+    
+    src: Adopt IP_PMTUDISC_PROBE
+
+commit fc43fc18057734e625c754c574fd3aa11e8c96e4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-06-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-06-29
+
+    src: Adopt IP_PMTUDISC_PROBE
+    
+    It seems that IP_PMTUDISC_PROBE works in some advertent situations.
+
+commit 1616d9ef05a59999bce33f373c6a7b33af85d87e
+Merge: 9f0c59d6 05b29df6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-06-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-06-21
+
+    Merge pull request #2465 from nghttp2/ngtcp2-map-port
+    
+    Port ngtcp2 map changes
+
+commit 05b29df6eb9c632df97614c4aceb0139bbac30ae
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-06-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-06-21
+
+    Port ngtcp2 map changes
+
+commit 9f0c59d6ddc795604bb9960cc677ad91ee565cab
+Merge: 0f46173c af02195b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2025-06-17
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2025-06-17
+
+    Merge pull request #2463 from nghttp2/android-docker-avoid-tag-event
+    
+    Do not trigger android workflow on tag event
+
+commit af02195b606ca63d192643a7ca9d86b673c16846
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-06-17
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-06-17
+
+    Do not trigger android workflow on tag event
+
+commit 0f46173c2dce932f4f8d84006c3dd0cd61fb5551
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-06-17
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-06-17
+
+    Bump package version

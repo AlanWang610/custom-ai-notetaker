@@ -39,3 +39,30 @@
 
 # debug information files
 *.dwo
+
+# Build directories
+build/
+cmake-build-*/
+
+# Models (large files)
+models/*.bin
+models/*.pt
+models/*.h5
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.aac
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependency archives (keep extracted folders)
+deps/**/*.zip
+deps/**/*.tgz
+deps/**/*.tar.gz
+deps/**/*.7z

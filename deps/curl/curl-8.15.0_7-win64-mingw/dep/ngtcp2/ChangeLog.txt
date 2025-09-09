@@ -1,0 +1,17 @@
+commit b32c09bdee4bf1f5f4decb539ea3e8c301b329a8
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2025-08-31
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-31
+
+    Bump package version
+
+commit 60d764573ea6aeca8cd7380608298a8344e01b76
+Author:     Viktor Szakats <commit@vsz.me>
+AuthorDate: 2025-08-23
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2025-08-31
+
+    build: install crypto header for libressl
+    
+    Follow-up to 433d297aacb93abf0ccddcd678d09239dfe4dd1e #1716
