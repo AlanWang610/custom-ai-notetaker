@@ -21,6 +21,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <conio.h>  // For _kbhit() and _getch() on Windows
 
 #include "whisper.h"
 
@@ -36,6 +37,26 @@
 #include <functiondiscoverykeys_devpkey.h>
 #include <wininet.h>
 #endif
+
+// -------------------- Global stop command control --------------------
+std::atomic<bool> g_stop_recording{false};
+
+// -------------------- Stop command monitoring --------------------
+void monitor_stop_command() {
+    std::cout << "Press 'q' and Enter to stop recording, or Ctrl+C to force quit..." << std::endl;
+    
+    while (!g_stop_recording.load()) {
+        if (_kbhit()) {
+            char key = _getch();
+            if (key == 'q' || key == 'Q') {
+                std::cout << "\nStop command received. Stopping recording..." << std::endl;
+                g_stop_recording.store(true);
+                break;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
 
 // -------------------- small utils --------------------
 static std::string json_escape(const std::string& s) {
@@ -171,9 +192,11 @@ enum class CaptureMode {
 
 struct RecordOptions {
     int seconds = 600;
+    int max_duration_seconds = 10800;  // 3 hours default (3 * 60 * 60)
     std::string out_path = "meeting.wav";
     CaptureMode mode = CaptureMode::LOOPBACK_ONLY;
     std::string mic_device_substr;  // Optional microphone device filter
+    bool enable_stop_command = true;  // Enable stop command functionality
 };
 
 #ifdef _WIN32
@@ -1039,17 +1062,28 @@ static int record_microphone_only(const RecordOptions& opt) {
     }
     
     std::cout << "Starting microphone recording for " << opt.seconds << " seconds..." << std::endl;
+    std::cout << "Maximum recording duration: " << opt.max_duration_seconds << " seconds" << std::endl;
     
     if (!micRecorder.StartRecording()) {
         std::cerr << "Failed to start microphone recording" << std::endl;
         return 3;
     }
     
-    // Record for specified duration
+    // Start stop command monitoring thread if enabled
+    std::thread stopMonitorThread;
+    if (opt.enable_stop_command) {
+        g_stop_recording.store(false);
+        stopMonitorThread = std::thread(monitor_stop_command);
+    }
+    
+    // Record for specified duration or until stop command
     auto startTime = std::chrono::high_resolution_clock::now();
     auto endTime = startTime + std::chrono::seconds(opt.seconds);
+    auto maxEndTime = startTime + std::chrono::seconds(opt.max_duration_seconds);
     
-    while (std::chrono::high_resolution_clock::now() < endTime) {
+    while (std::chrono::high_resolution_clock::now() < endTime && 
+           std::chrono::high_resolution_clock::now() < maxEndTime &&
+           !g_stop_recording.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
         auto audioData = micRecorder.GetAudioData();
@@ -1065,6 +1099,21 @@ static int record_microphone_only(const RecordOptions& opt) {
             wavWriter.writeInt16(int16Data);
             micRecorder.ClearAudioData();
         }
+    }
+    
+    // Check why recording stopped
+    if (g_stop_recording.load()) {
+        std::cout << "Recording stopped by user command." << std::endl;
+    } else if (std::chrono::high_resolution_clock::now() >= maxEndTime) {
+        std::cout << "Recording stopped due to maximum duration limit (" << opt.max_duration_seconds << " seconds)." << std::endl;
+    } else {
+        std::cout << "Recording completed normally." << std::endl;
+    }
+    
+    // Clean up stop monitoring thread
+    if (stopMonitorThread.joinable()) {
+        g_stop_recording.store(true);  // Signal thread to exit
+        stopMonitorThread.join();
     }
     
     micRecorder.StopRecording();
@@ -1177,12 +1226,23 @@ static int record_dual_audio(const RecordOptions& opt) {
     }
     
     std::cout << "Starting dual recording for " << opt.seconds << " seconds..." << std::endl;
+    std::cout << "Maximum recording duration: " << opt.max_duration_seconds << " seconds" << std::endl;
     
-    // Record for specified duration
+    // Start stop command monitoring thread if enabled
+    std::thread stopMonitorThread;
+    if (opt.enable_stop_command) {
+        g_stop_recording.store(false);
+        stopMonitorThread = std::thread(monitor_stop_command);
+    }
+    
+    // Record for specified duration or until stop command
     auto startTime = std::chrono::high_resolution_clock::now();
     auto endTime = startTime + std::chrono::seconds(opt.seconds);
+    auto maxEndTime = startTime + std::chrono::seconds(opt.max_duration_seconds);
     
-    while (std::chrono::high_resolution_clock::now() < endTime) {
+    while (std::chrono::high_resolution_clock::now() < endTime && 
+           std::chrono::high_resolution_clock::now() < maxEndTime &&
+           !g_stop_recording.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Higher frequency for dual capture
         
         auto loopbackData = loopbackRecorder.GetAudioData();
@@ -1264,6 +1324,21 @@ static int record_dual_audio(const RecordOptions& opt) {
         }
     }
     
+    // Check why recording stopped
+    if (g_stop_recording.load()) {
+        std::cout << "Recording stopped by user command." << std::endl;
+    } else if (std::chrono::high_resolution_clock::now() >= maxEndTime) {
+        std::cout << "Recording stopped due to maximum duration limit (" << opt.max_duration_seconds << " seconds)." << std::endl;
+    } else {
+        std::cout << "Recording completed normally." << std::endl;
+    }
+    
+    // Clean up stop monitoring thread
+    if (stopMonitorThread.joinable()) {
+        g_stop_recording.store(true);  // Signal thread to exit
+        stopMonitorThread.join();
+    }
+    
     // Stop recordings and cleanup
     loopbackRecorder.StopRecording();
     micRecorder.StopRecording();
@@ -1314,6 +1389,7 @@ static int record_wasapi_loopback(const RecordOptions& opt) {
     }
     
     std::cout << "Starting WASAPI loopback recording for " << opt.seconds << " seconds..." << std::endl;
+    std::cout << "Maximum recording duration: " << opt.max_duration_seconds << " seconds" << std::endl;
     std::cout << "Recording system audio output to: " << opt.out_path << std::endl;
     std::cout << "Make sure some audio is playing for best results!" << std::endl;
     
@@ -1322,11 +1398,21 @@ static int record_wasapi_loopback(const RecordOptions& opt) {
         return 3;
     }
     
-    // Record for specified duration
+    // Start stop command monitoring thread if enabled
+    std::thread stopMonitorThread;
+    if (opt.enable_stop_command) {
+        g_stop_recording.store(false);
+        stopMonitorThread = std::thread(monitor_stop_command);
+    }
+    
+    // Record for specified duration or until stop command
     auto startTime = std::chrono::high_resolution_clock::now();
     auto endTime = startTime + std::chrono::seconds(opt.seconds);
+    auto maxEndTime = startTime + std::chrono::seconds(opt.max_duration_seconds);
     
-    while (std::chrono::high_resolution_clock::now() < endTime) {
+    while (std::chrono::high_resolution_clock::now() < endTime && 
+           std::chrono::high_resolution_clock::now() < maxEndTime &&
+           !g_stop_recording.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
         // Get accumulated audio data
@@ -1348,6 +1434,21 @@ static int record_wasapi_loopback(const RecordOptions& opt) {
             // Clear the buffer to avoid writing duplicate data
             recorder.ClearAudioData();
         }
+    }
+    
+    // Check why recording stopped
+    if (g_stop_recording.load()) {
+        std::cout << "Recording stopped by user command." << std::endl;
+    } else if (std::chrono::high_resolution_clock::now() >= maxEndTime) {
+        std::cout << "Recording stopped due to maximum duration limit (" << opt.max_duration_seconds << " seconds)." << std::endl;
+    } else {
+        std::cout << "Recording completed normally." << std::endl;
+    }
+    
+    // Clean up stop monitoring thread
+    if (stopMonitorThread.joinable()) {
+        g_stop_recording.store(true);  // Signal thread to exit
+        stopMonitorThread.join();
     }
     
     recorder.StopRecording();
@@ -1544,8 +1645,10 @@ int main(int argc, char** argv) {
         std::string a = argv[i];
         if (a == "--model" && i+1 < argc) model_path = argv[++i];
         else if (a == "--seconds" && i+1 < argc) rec_opt.seconds = std::atoi(argv[++i]);
+        else if (a == "--max-duration" && i+1 < argc) rec_opt.max_duration_seconds = std::atoi(argv[++i]);
         else if (a == "--out" && i+1 < argc) rec_opt.out_path = argv[++i];
         else if (a == "--mic-device" && i+1 < argc) rec_opt.mic_device_substr = argv[++i];
+        else if (a == "--no-stop-command") rec_opt.enable_stop_command = false;
         else if (a == "--mode" && i+1 < argc) {
             std::string mode_str = argv[++i];
             if (mode_str == "loopback") rec_opt.mode = CaptureMode::LOOPBACK_ONLY;
@@ -1563,6 +1666,7 @@ int main(int argc, char** argv) {
             std::cout << "Options:\n";
             std::cout << "  --model path        Whisper model file (default: models/ggml-small.en-tdrz.bin)\n";
             std::cout << "  --seconds N         Recording duration in seconds (default: 600)\n";
+            std::cout << "  --max-duration N    Maximum recording duration in seconds (default: 10800 = 3 hours)\n";
             std::cout << "  --out wav           Output WAV file (default: meeting.wav)\n";
             std::cout << "  --mode MODE         Capture mode (default: loopback)\n";
             std::cout << "                        loopback      - System audio only\n";
@@ -1571,12 +1675,19 @@ int main(int argc, char** argv) {
             std::cout << "                        dual-stereo   - Both mixed to stereo (L=mic, R=system)\n";
             std::cout << "                        dual-mono     - Both mixed to mono\n";
             std::cout << "  --mic-device substr Optional microphone device substring filter\n";
+            std::cout << "  --no-stop-command   Disable stop command (recording will only stop at duration limit)\n";
             std::cout << "  -h, --help          Show this help message\n";
+            std::cout << "\nRecording Control:\n";
+            std::cout << "  - Recording will stop when either the specified duration is reached OR the maximum duration is reached\n";
+            std::cout << "  - Press 'q' and Enter during recording to stop early (unless --no-stop-command is used)\n";
+            std::cout << "  - Use Ctrl+C to force quit the application\n";
             std::cout << "\nExamples:\n";
             std::cout << "  " << argv[0] << " --seconds 300 --out call.wav\n";
             std::cout << "  " << argv[0] << " --mode dual-stereo --seconds 120 --out meeting.wav\n";
             std::cout << "  " << argv[0] << " --mode dual-separate --out dual_capture.wav\n";
             std::cout << "  " << argv[0] << " --mode microphone --mic-device \"USB Mic\"\n";
+            std::cout << "  " << argv[0] << " --max-duration 7200 --seconds 1800  # Max 2 hours, record for 30 min\n";
+            std::cout << "  " << argv[0] << " --no-stop-command --seconds 3600    # Record for 1 hour, no manual stop\n";
             std::cout << "\nNote: Uses WASAPI for high-quality audio capture on Windows.\n";
             return 0;
         }
