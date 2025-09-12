@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <sstream>
 #include <conio.h>
+#include <samplerate.h>
 
 // Windows Audio Session API headers
 #include <windows.h>
@@ -54,6 +55,8 @@ private:
     
     std::vector<int16_t> microphoneBuffer;
     std::vector<int16_t> systemBuffer;
+    std::vector<int16_t> microphoneBufferNative;
+    std::vector<int16_t> systemBufferNative;
     std::atomic<bool> recording;
     std::atomic<bool> shouldStop;
     std::thread recordingThread;
@@ -61,8 +64,14 @@ private:
     
     WAVEFORMATEX* microphoneWaveFormat;
     WAVEFORMATEX* systemWaveFormat;
+    WAVEFORMATEX* microphoneWaveFormatNative;
+    WAVEFORMATEX* systemWaveFormatNative;
     UINT32 microphoneBufferFrameCount;
     UINT32 systemBufferFrameCount;
+    
+    // libsamplerate state
+    SRC_STATE* microphoneSrcState;
+    SRC_STATE* systemSrcState;
     
     std::string outputDirectory;
     std::string baseFilename;
@@ -74,8 +83,10 @@ public:
                      captureClient(nullptr), captureClientInterface(nullptr),
                      renderClientInterface(nullptr), loopbackClient(nullptr),
                      loopbackCaptureClient(nullptr), microphoneWaveFormat(nullptr),
-                     systemWaveFormat(nullptr), microphoneBufferFrameCount(0), 
-                     systemBufferFrameCount(0), recording(false), shouldStop(false), 
+                     systemWaveFormat(nullptr), microphoneWaveFormatNative(nullptr),
+                     systemWaveFormatNative(nullptr), microphoneBufferFrameCount(0), 
+                     systemBufferFrameCount(0), microphoneSrcState(nullptr),
+                     systemSrcState(nullptr), recording(false), shouldStop(false), 
                      recordingDurationSeconds(0) {
     }
 
@@ -112,23 +123,50 @@ public:
         hr = defaultCaptureDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, (void**)&captureClient);
         if (FAILED(hr)) return hr;
 
-        // Get wave format for system audio (loopback)
-        hr = loopbackClient->GetMixFormat(&systemWaveFormat);
+        // Get native formats for both devices
+        hr = captureClient->GetMixFormat(&microphoneWaveFormatNative);
         if (FAILED(hr)) return hr;
 
-        // Get wave format for microphone
-        hr = captureClient->GetMixFormat(&microphoneWaveFormat);
+        hr = loopbackClient->GetMixFormat(&systemWaveFormatNative);
         if (FAILED(hr)) return hr;
 
-        // Initialize loopback client
+        // Create 16 kHz formats for output
+        microphoneWaveFormat = (WAVEFORMATEX*)CoTaskMemAlloc(sizeof(WAVEFORMATEX));
+        if (!microphoneWaveFormat) return E_OUTOFMEMORY;
+        
+        systemWaveFormat = (WAVEFORMATEX*)CoTaskMemAlloc(sizeof(WAVEFORMATEX));
+        if (!systemWaveFormat) {
+            CoTaskMemFree(microphoneWaveFormat);
+            return E_OUTOFMEMORY;
+        }
+
+        // Configure microphone format for 16 kHz, 16-bit, mono
+        microphoneWaveFormat->wFormatTag = WAVE_FORMAT_PCM;
+        microphoneWaveFormat->nChannels = 1;  // Mono
+        microphoneWaveFormat->nSamplesPerSec = 16000;  // 16 kHz
+        microphoneWaveFormat->wBitsPerSample = 16;
+        microphoneWaveFormat->nBlockAlign = microphoneWaveFormat->nChannels * microphoneWaveFormat->wBitsPerSample / 8;
+        microphoneWaveFormat->nAvgBytesPerSec = microphoneWaveFormat->nSamplesPerSec * microphoneWaveFormat->nBlockAlign;
+        microphoneWaveFormat->cbSize = 0;
+
+        // Configure system format for 16 kHz, 16-bit, mono
+        systemWaveFormat->wFormatTag = WAVE_FORMAT_PCM;
+        systemWaveFormat->nChannels = 1;  // Mono for system audio too
+        systemWaveFormat->nSamplesPerSec = 16000;  // 16 kHz
+        systemWaveFormat->wBitsPerSample = 16;
+        systemWaveFormat->nBlockAlign = systemWaveFormat->nChannels * systemWaveFormat->wBitsPerSample / 8;
+        systemWaveFormat->nAvgBytesPerSec = systemWaveFormat->nSamplesPerSec * systemWaveFormat->nBlockAlign;
+        systemWaveFormat->cbSize = 0;
+
+        // Initialize loopback client with native format
         hr = loopbackClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 
                                       AUDCLNT_STREAMFLAGS_LOOPBACK, 
-                                      0, 0, systemWaveFormat, nullptr);
+                                      0, 0, systemWaveFormatNative, nullptr);
         if (FAILED(hr)) return hr;
 
-        // Initialize capture client
+        // Initialize capture client with native format
         hr = captureClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, 
-                                     10000000, 0, microphoneWaveFormat, nullptr);
+                                     10000000, 0, microphoneWaveFormatNative, nullptr);
         if (FAILED(hr)) return hr;
 
         // Get capture client interface
@@ -146,6 +184,20 @@ public:
         hr = loopbackClient->GetBufferSize(&systemBufferFrameCount);
         if (FAILED(hr)) return hr;
 
+        // Initialize libsamplerate for resampling (both will output mono)
+        int error;
+        microphoneSrcState = src_new(SRC_SINC_BEST_QUALITY, 1, &error);
+        if (!microphoneSrcState) {
+            std::cerr << "Failed to initialize microphone resampler: " << src_strerror(error) << std::endl;
+            return E_FAIL;
+        }
+
+        systemSrcState = src_new(SRC_SINC_BEST_QUALITY, 1, &error);
+        if (!systemSrcState) {
+            std::cerr << "Failed to initialize system audio resampler: " << src_strerror(error) << std::endl;
+            return E_FAIL;
+        }
+
         // Get device names for debugging
         LPWSTR microphoneDeviceId = nullptr;
         LPWSTR systemDeviceId = nullptr;
@@ -159,16 +211,17 @@ public:
         CoTaskMemFree(microphoneDeviceId);
         CoTaskMemFree(systemDeviceId);
         
-        std::cout << "Microphone:" << std::endl;
-        std::cout << "  Sample rate: " << microphoneWaveFormat->nSamplesPerSec << " Hz" << std::endl;
-        std::cout << "  Channels: " << microphoneWaveFormat->nChannels << std::endl;
-        std::cout << "  Bits per sample: " << microphoneWaveFormat->wBitsPerSample << std::endl;
+        std::cout << "Microphone (Native):" << std::endl;
+        std::cout << "  Sample rate: " << microphoneWaveFormatNative->nSamplesPerSec << " Hz" << std::endl;
+        std::cout << "  Channels: " << microphoneWaveFormatNative->nChannels << std::endl;
+        std::cout << "  Bits per sample: " << microphoneWaveFormatNative->wBitsPerSample << std::endl;
         std::cout << "  Buffer size: " << microphoneBufferFrameCount << " frames" << std::endl;
-        std::cout << "System Audio:" << std::endl;
-        std::cout << "  Sample rate: " << systemWaveFormat->nSamplesPerSec << " Hz" << std::endl;
-        std::cout << "  Channels: " << systemWaveFormat->nChannels << std::endl;
-        std::cout << "  Bits per sample: " << systemWaveFormat->wBitsPerSample << std::endl;
+        std::cout << "System Audio (Native):" << std::endl;
+        std::cout << "  Sample rate: " << systemWaveFormatNative->nSamplesPerSec << " Hz" << std::endl;
+        std::cout << "  Channels: " << systemWaveFormatNative->nChannels << std::endl;
+        std::cout << "  Bits per sample: " << systemWaveFormatNative->wBitsPerSample << std::endl;
         std::cout << "  Buffer size: " << systemBufferFrameCount << " frames" << std::endl;
+        std::cout << "Output will be resampled to 16 kHz" << std::endl;
 
         return S_OK;
     }
@@ -228,17 +281,21 @@ private:
                 break;
             }
             
-            // Capture microphone data
-            CaptureAudioData(captureClientInterface, microphoneBufferFrameCount, microphoneBuffer, "Microphone", microphoneWaveFormat);
+            // Capture microphone data to native buffer
+            CaptureAudioData(captureClientInterface, microphoneBufferFrameCount, microphoneBufferNative, "Microphone", microphoneWaveFormatNative);
             
-            // Capture loopback data
-            CaptureAudioData(loopbackCaptureClient, systemBufferFrameCount, systemBuffer, "System", systemWaveFormat);
+            // Capture loopback data to native buffer
+            CaptureAudioData(loopbackCaptureClient, systemBufferFrameCount, systemBufferNative, "System", systemWaveFormatNative);
             
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         
-        std::cout << "Recording loop ended. Microphone samples: " << microphoneBuffer.size() 
-                  << ", System samples: " << systemBuffer.size() << std::endl;
+        std::cout << "Recording loop ended. Microphone samples (native): " << microphoneBufferNative.size() 
+                  << ", System samples (native): " << systemBufferNative.size() << std::endl;
+        
+        // Resample the audio data
+        ResampleAudio();
+        
         recording = false;
     }
 
@@ -257,16 +314,27 @@ private:
             if (SUCCEEDED(hr)) {
                 // Always capture data for debugging (remove silence check temporarily)
                 if (numFramesAvailable > 0) {
-                    // Convert float samples to 16-bit PCM
-                    float* floatData = (float*)data;
-                    for (UINT32 i = 0; i < numFramesAvailable * waveFormat->nChannels; i++) {
-                        // Clamp the value to prevent overflow
-                        float sample = floatData[i];
-                        if (sample > 1.0f) sample = 1.0f;
-                        if (sample < -1.0f) sample = -1.0f;
-                        
-                        int16_t pcmSample = (int16_t)(sample * 32767.0f);
-                        buffer.push_back(pcmSample);
+                    // Convert samples to 16-bit PCM based on the format
+                    if (waveFormat->wBitsPerSample == 32 && (waveFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT || waveFormat->wFormatTag == 65534)) {
+                        // Float samples
+                        float* floatData = (float*)data;
+                        for (UINT32 i = 0; i < numFramesAvailable * waveFormat->nChannels; i++) {
+                            // Clamp the value to prevent overflow
+                            float sample = floatData[i];
+                            if (sample > 1.0f) sample = 1.0f;
+                            if (sample < -1.0f) sample = -1.0f;
+                            
+                            int16_t pcmSample = (int16_t)(sample * 32767.0f);
+                            buffer.push_back(pcmSample);
+                        }
+                    } else if (waveFormat->wBitsPerSample == 16) {
+                        // Already 16-bit PCM
+                        int16_t* pcmData = (int16_t*)data;
+                        for (UINT32 i = 0; i < numFramesAvailable * waveFormat->nChannels; i++) {
+                            buffer.push_back(pcmData[i]);
+                        }
+                    } else {
+                        std::cerr << sourceName << " - Unsupported audio format: " << waveFormat->wBitsPerSample << " bits, format: " << waveFormat->wFormatTag << std::endl;
                     }
                 }
                 
@@ -277,6 +345,85 @@ private:
             
             hr = client->GetNextPacketSize(&packetLength);
         }
+    }
+
+    void ResampleAudio() {
+        std::cout << "Starting audio resampling..." << std::endl;
+        
+        // Resample microphone audio
+        if (!microphoneBufferNative.empty()) {
+            ResampleBuffer(microphoneBufferNative, microphoneBuffer, microphoneSrcState, 
+                          microphoneWaveFormatNative, microphoneWaveFormat, "Microphone");
+        }
+        
+        // Resample system audio
+        if (!systemBufferNative.empty()) {
+            ResampleBuffer(systemBufferNative, systemBuffer, systemSrcState, 
+                          systemWaveFormatNative, systemWaveFormat, "System");
+        }
+        
+        std::cout << "Resampling completed. Microphone samples (resampled): " << microphoneBuffer.size() 
+                  << ", System samples (resampled): " << systemBuffer.size() << std::endl;
+    }
+
+    void ResampleBuffer(const std::vector<int16_t>& inputBuffer, std::vector<int16_t>& outputBuffer, 
+                       SRC_STATE* srcState, WAVEFORMATEX* inputFormat, WAVEFORMATEX* outputFormat, 
+                       const std::string& sourceName) {
+        if (inputBuffer.empty()) return;
+        
+        // Calculate the ratio for resampling
+        double ratio = (double)outputFormat->nSamplesPerSec / (double)inputFormat->nSamplesPerSec;
+        
+        // First, convert multi-channel to mono by averaging channels
+        std::vector<float> monoInput;
+        size_t inputFrames = inputBuffer.size() / inputFormat->nChannels;
+        monoInput.reserve(inputFrames);
+        
+        for (size_t frame = 0; frame < inputFrames; frame++) {
+            float sum = 0.0f;
+            for (int ch = 0; ch < inputFormat->nChannels; ch++) {
+                size_t sampleIndex = frame * inputFormat->nChannels + ch;
+                sum += (float)inputBuffer[sampleIndex] / 32768.0f;
+            }
+            monoInput.push_back(sum / inputFormat->nChannels);
+        }
+        
+        // Estimate output size for mono
+        size_t estimatedOutputFrames = (size_t)(inputFrames * ratio * 1.1);
+        outputBuffer.reserve(estimatedOutputFrames);
+        
+        // Prepare output buffer
+        std::vector<float> outputFloat(estimatedOutputFrames);
+        
+        SRC_DATA srcData;
+        srcData.data_in = monoInput.data();
+        srcData.data_out = outputFloat.data();
+        srcData.input_frames = (long)inputFrames;
+        srcData.output_frames = (long)estimatedOutputFrames;
+        srcData.src_ratio = ratio;
+        srcData.end_of_input = 1;
+        
+        // Perform resampling
+        int error = src_process(srcState, &srcData);
+        if (error) {
+            std::cerr << sourceName << " resampling error: " << src_strerror(error) << std::endl;
+            return;
+        }
+        
+        // Convert back to 16-bit PCM
+        size_t outputSamples = srcData.output_frames;
+        outputBuffer.resize(outputSamples);
+        for (size_t i = 0; i < outputSamples; i++) {
+            // Clamp and convert to 16-bit
+            float sample = outputFloat[i];
+            if (sample > 1.0f) sample = 1.0f;
+            if (sample < -1.0f) sample = -1.0f;
+            outputBuffer[i] = (int16_t)(sample * 32767.0f);
+        }
+        
+        std::cout << sourceName << " resampled: " << inputBuffer.size() << " samples (" 
+                  << inputFormat->nChannels << "ch) -> " << outputBuffer.size() 
+                  << " samples (1ch) (ratio: " << ratio << ")" << std::endl;
     }
 
     void KeyboardLoop() {
@@ -356,6 +503,16 @@ private:
     }
 
     void Cleanup() {
+        if (microphoneSrcState) {
+            src_delete(microphoneSrcState);
+            microphoneSrcState = nullptr;
+        }
+        
+        if (systemSrcState) {
+            src_delete(systemSrcState);
+            systemSrcState = nullptr;
+        }
+        
         if (microphoneWaveFormat) {
             CoTaskMemFree(microphoneWaveFormat);
             microphoneWaveFormat = nullptr;
@@ -364,6 +521,16 @@ private:
         if (systemWaveFormat) {
             CoTaskMemFree(systemWaveFormat);
             systemWaveFormat = nullptr;
+        }
+        
+        if (microphoneWaveFormatNative) {
+            CoTaskMemFree(microphoneWaveFormatNative);
+            microphoneWaveFormatNative = nullptr;
+        }
+        
+        if (systemWaveFormatNative) {
+            CoTaskMemFree(systemWaveFormatNative);
+            systemWaveFormatNative = nullptr;
         }
         
         if (captureClientInterface) {

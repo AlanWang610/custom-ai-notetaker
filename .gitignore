@@ -48,6 +48,7 @@ cmake-build-*/
 models/*.bin
 models/*.pt
 models/*.h5
+models/*
 
 # Audio files
 *.wav
