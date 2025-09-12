@@ -4,6 +4,9 @@
 #include <filesystem>
 #include <chrono>
 #include <map>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
 
 #include "c-api/c-api.h"
 
@@ -365,6 +368,59 @@ void PrintUsage(const char* programName) {
     std::cout << "The embedding model should be: models/nemo_en_titanet_small.onnx" << std::endl;
 }
 
+std::string GenerateTranscriptFilename(const std::string& audioFile) {
+    // Extract the base filename without extension
+    std::filesystem::path path(audioFile);
+    std::string stem = path.stem().string();
+    
+    // Replace "recording" with "transcript" and remove "_microphone" or "_system" suffix
+    std::string transcriptName = stem;
+    
+    // Remove "_microphone" or "_system" suffix if present
+    size_t pos = transcriptName.find("_microphone");
+    if (pos != std::string::npos) {
+        transcriptName = transcriptName.substr(0, pos);
+    } else {
+        pos = transcriptName.find("_system");
+        if (pos != std::string::npos) {
+            transcriptName = transcriptName.substr(0, pos);
+        }
+    }
+    
+    // Replace "recording" with "transcript"
+    pos = transcriptName.find("recording");
+    if (pos != std::string::npos) {
+        transcriptName.replace(pos, 9, "transcript");
+    }
+    
+    return transcriptName + ".txt";
+}
+
+void ExportCombinedTranscript(const std::vector<SpeakerSegment>& allSegments, const std::string& filename) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Failed to create transcript file: " << filename << std::endl;
+        return;
+    }
+    
+    file << "=== Combined Transcript ===" << std::endl;
+    
+    // Get current time and format it
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+    file << "Generated: " << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") << std::endl;
+    file << "Total segments: " << allSegments.size() << std::endl;
+    file << std::endl;
+    
+    for (const auto& segment : allSegments) {
+        file << "[" << std::fixed << std::setprecision(2) << segment.start << "s - " 
+             << segment.end << "s] Speaker " << segment.speaker << ": " << segment.text << std::endl;
+    }
+    
+    file.close();
+    std::cout << "Combined transcript exported to: " << filename << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         PrintUsage(argv[0]);
@@ -383,14 +439,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    std::cout << "=== Custom AI Note Taker - Transcription Engine with Speaker Diarization ===" << std::endl;
+    std::cout << "=== Custom AI Note Taker - Combined Transcript Generator ===" << std::endl;
     std::cout << "Processing " << (argc - 1) << " audio file(s)..." << std::endl;
     std::cout << std::endl;
+    
+    std::vector<SpeakerSegment> allSegments;
+    int maxMicrophoneSpeakerId = 0;
+    std::string transcriptFilename;
     
     // Process each audio file
     for (int i = 1; i < argc; i++) {
         std::string wavFile = argv[i];
-        std::cout << "[" << i << "/" << (argc - 1) << "] ";
+        std::cout << "[" << i << "/" << (argc - 1) << "] Processing: " << wavFile << std::endl;
         
         // Try speaker diarization first
         std::vector<SpeakerSegment> segments = engine.TranscribeWithDiarization(wavFile);
@@ -399,35 +459,79 @@ int main(int argc, char* argv[]) {
             std::cout << "No speaker segments found, falling back to VAD-only transcription" << std::endl;
             std::string transcription = engine.TranscribeFile(wavFile);
             
-            if (transcription.empty()) {
-                std::cout << "Failed to transcribe: " << wavFile << std::endl;
-            } else {
-                std::cout << "Successfully transcribed: " << wavFile << std::endl;
-                std::cout << "Result: \"" << transcription << "\"" << std::endl;
-            }
-        } else {
-            std::cout << "Successfully processed with speaker diarization: " << wavFile << std::endl;
-            std::cout << "Found " << segments.size() << " speaker segments" << std::endl;
-            
-            // Group by speaker
-            std::map<int, std::vector<SpeakerSegment>> speakerGroups;
-            for (const auto& segment : segments) {
-                speakerGroups[segment.speaker].push_back(segment);
-            }
-            
-            std::cout << "Speaker Summary:" << std::endl;
-            for (const auto& pair : speakerGroups) {
-                int speakerId = pair.first;
-                const auto& speakerSegments = pair.second;
-                std::cout << "  Speaker " << speakerId << " (" << speakerSegments.size() << " segments):" << std::endl;
-                
-                for (const auto& segment : speakerSegments) {
-                    std::cout << "    [" << segment.start << "s - " << segment.end << "s]: " << segment.text << std::endl;
-                }
+            if (!transcription.empty()) {
+                // Create a single segment for the entire transcription
+                SpeakerSegment segment;
+                segment.start = 0.0f;
+                segment.end = 10.0f; // Default duration
+                segment.speaker = 1;
+                segment.text = transcription;
+                segments.push_back(segment);
             }
         }
         
+        if (!segments.empty()) {
+            std::cout << "Found " << segments.size() << " speaker segments" << std::endl;
+            
+            // Determine if this is microphone or system audio based on filename
+            bool isMicrophoneAudio = wavFile.find("_microphone") != std::string::npos;
+            int speakerIdOffset = isMicrophoneAudio ? 0 : maxMicrophoneSpeakerId;
+            
+            // Remap speaker IDs to ensure distinct identities
+            for (auto& segment : segments) {
+                segment.speaker += speakerIdOffset;
+                
+                // Track the maximum speaker ID for microphone audio
+                if (isMicrophoneAudio) {
+                    maxMicrophoneSpeakerId = std::max(maxMicrophoneSpeakerId, segment.speaker);
+                }
+                
+                allSegments.push_back(segment);
+            }
+            
+            // Generate transcript filename from the first audio file
+            if (transcriptFilename.empty()) {
+                transcriptFilename = GenerateTranscriptFilename(wavFile);
+            }
+            
+            std::cout << "Successfully processed: " << wavFile << std::endl;
+        } else {
+            std::cout << "Failed to process: " << wavFile << std::endl;
+        }
+        
         std::cout << std::endl;
+    }
+    
+    if (!allSegments.empty()) {
+        // Sort all segments by start time
+        std::sort(allSegments.begin(), allSegments.end(), 
+                  [](const SpeakerSegment& a, const SpeakerSegment& b) {
+                      return a.start < b.start;
+                  });
+        
+        // Display combined results
+        std::cout << "=== Combined Transcript Summary ===" << std::endl;
+        std::cout << "Total segments: " << allSegments.size() << std::endl;
+        
+        // Group by speaker for summary
+        std::map<int, std::vector<SpeakerSegment>> speakerGroups;
+        for (const auto& segment : allSegments) {
+            speakerGroups[segment.speaker].push_back(segment);
+        }
+        
+        std::cout << "Speakers found: " << speakerGroups.size() << std::endl;
+        for (const auto& pair : speakerGroups) {
+            int speakerId = pair.first;
+            const auto& speakerSegments = pair.second;
+            std::cout << "  Speaker " << speakerId << " (" << speakerSegments.size() << " segments)" << std::endl;
+        }
+        
+        // Export to file
+        if (!transcriptFilename.empty()) {
+            ExportCombinedTranscript(allSegments, transcriptFilename);
+        }
+    } else {
+        std::cout << "No segments found to combine." << std::endl;
     }
     
     std::cout << "Transcription process completed." << std::endl;
