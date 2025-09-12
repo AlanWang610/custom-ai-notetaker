@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add executables
 add_executable(record src/record.cpp)
-add_executable(transcribe src/transcription_and_diarization.cpp)
+add_executable(transcribe src/transcribe_and_diarize.cpp)
 
 # Find libsamplerate
 find_library(SAMPLERATE_LIB 
