@@ -9,16 +9,22 @@
 class TranscriptionEngine {
 private:
     const SherpaOnnxOfflineRecognizer* recognizer;
+    const SherpaOnnxVoiceActivityDetector* vad;
     std::string modelPath;
+    std::string vadModelPath;
     
 public:
-    TranscriptionEngine(const std::string& modelDir) : recognizer(nullptr), modelPath(modelDir) {
+    TranscriptionEngine(const std::string& modelDir, const std::string& vadModelFile) 
+        : recognizer(nullptr), vad(nullptr), modelPath(modelDir), vadModelPath(vadModelFile) {
         Initialize();
     }
     
     ~TranscriptionEngine() {
         if (recognizer) {
             SherpaOnnxDestroyOfflineRecognizer(recognizer);
+        }
+        if (vad) {
+            SherpaOnnxDestroyVoiceActivityDetector(vad);
         }
     }
     
@@ -36,6 +42,11 @@ public:
             !std::filesystem::exists(cached_decoder) || 
             !std::filesystem::exists(tokens)) {
             std::cerr << "Error: Required model files not found in " << modelPath << std::endl;
+            return false;
+        }
+        
+        if (!std::filesystem::exists(vadModelPath)) {
+            std::cerr << "Error: VAD model file not found: " << vadModelPath << std::endl;
             return false;
         }
         
@@ -65,13 +76,35 @@ public:
             return false;
         }
         
-        std::cout << "Transcription engine initialized successfully with model: " << modelPath << std::endl;
+        // Configure VAD
+        SherpaOnnxVadModelConfig vadConfig;
+        memset(&vadConfig, 0, sizeof(vadConfig));
+        vadConfig.silero_vad.model = vadModelPath.c_str();
+        vadConfig.silero_vad.threshold = 0.25f;
+        vadConfig.silero_vad.min_silence_duration = 0.5f;
+        vadConfig.silero_vad.min_speech_duration = 0.5f;
+        vadConfig.silero_vad.max_speech_duration = 10.0f;
+        vadConfig.silero_vad.window_size = 512;
+        vadConfig.sample_rate = 16000;
+        vadConfig.num_threads = 1;
+        vadConfig.debug = 0;
+        
+        vad = SherpaOnnxCreateVoiceActivityDetector(&vadConfig, 30);
+        
+        if (vad == nullptr) {
+            std::cerr << "Error: Failed to create VAD" << std::endl;
+            return false;
+        }
+        
+        std::cout << "Transcription engine with VAD initialized successfully" << std::endl;
+        std::cout << "ASR Model: " << modelPath << std::endl;
+        std::cout << "VAD Model: " << vadModelPath << std::endl;
         return true;
     }
     
     std::string TranscribeFile(const std::string& wavFile) {
-        if (!recognizer) {
-            std::cerr << "Error: Recognizer not initialized" << std::endl;
+        if (!recognizer || !vad) {
+            std::cerr << "Error: Transcription engine not initialized" << std::endl;
             return "";
         }
         
@@ -89,52 +122,98 @@ public:
             return "";
         }
         
-        std::cout << "Audio info - Sample rate: " << wave->sample_rate << " Hz, Samples: " << wave->num_samples << std::endl;
-        
-        // Create offline stream
-        const SherpaOnnxOfflineStream* stream = SherpaOnnxCreateOfflineStream(recognizer);
-        if (stream == nullptr) {
-            std::cerr << "Error: Failed to create offline stream" << std::endl;
+        // Check sample rate
+        if (wave->sample_rate != 16000) {
+            std::cerr << "Warning: Expected sample rate 16000 Hz, got " << wave->sample_rate << " Hz" << std::endl;
             SherpaOnnxFreeWave(wave);
-            return "";
+            return "Error: Unsupported sample rate";
         }
         
-        // Process the audio
+        std::cout << "Audio info - Sample rate: " << wave->sample_rate << " Hz, Samples: " << wave->num_samples << std::endl;
+        
+        // Process audio with VAD
+        std::vector<std::string> transcriptions;
+        int32_t window_size = 512; // Silero VAD window size
+        int32_t i = 0;
+        int is_eof = 0;
+        
         auto start_time = std::chrono::high_resolution_clock::now();
         
-        SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples, wave->num_samples);
-        SherpaOnnxDecodeOfflineStream(recognizer, stream);
+        while (!is_eof) {
+            if (i + window_size < wave->num_samples) {
+                SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i, window_size);
+            } else {
+                SherpaOnnxVoiceActivityDetectorFlush(vad);
+                is_eof = 1;
+            }
+            
+            while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
+                const SherpaOnnxSpeechSegment* segment = SherpaOnnxVoiceActivityDetectorFront(vad);
+                
+                // Create stream for this segment
+                const SherpaOnnxOfflineStream* stream = SherpaOnnxCreateOfflineStream(recognizer);
+                
+                // Accept waveform for this segment
+                SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, segment->samples, segment->n);
+                
+                // Decode
+                SherpaOnnxDecodeOfflineStream(recognizer, stream);
+                
+                // Get result
+                const SherpaOnnxOfflineRecognizerResult* result = SherpaOnnxGetOfflineStreamResult(stream);
+                
+                float start = segment->start / 16000.0f;
+                float duration = segment->n / 16000.0f;
+                float stop = start + duration;
+                
+                std::string segmentText = result ? result->text : "";
+                if (!segmentText.empty()) {
+                    transcriptions.push_back(segmentText);
+                    std::cout << "Speech segment [" << start << "s - " << stop << "s]: " << segmentText << std::endl;
+                }
+                
+                // Cleanup
+                if (result) {
+                    SherpaOnnxDestroyOfflineRecognizerResult(result);
+                }
+                SherpaOnnxDestroyOfflineStream(stream);
+                SherpaOnnxDestroySpeechSegment(segment);
+                SherpaOnnxVoiceActivityDetectorPop(vad);
+            }
+            i += window_size;
+        }
         
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         
-        // Get the result
-        const SherpaOnnxOfflineRecognizerResult* result = SherpaOnnxGetOfflineStreamResult(stream);
-        
-        std::string transcription = result ? result->text : "";
+        // Combine all transcriptions
+        std::string fullTranscription;
+        for (size_t j = 0; j < transcriptions.size(); ++j) {
+            if (j > 0) {
+                fullTranscription += " ";
+            }
+            fullTranscription += transcriptions[j];
+        }
         
         std::cout << "Transcription completed in " << duration.count() << " ms" << std::endl;
-        std::cout << "Transcription: " << transcription << std::endl;
+        std::cout << "Transcription: " << (fullTranscription.empty() ? "No speech detected" : fullTranscription) << std::endl;
         
         // Cleanup
-        if (result) {
-            SherpaOnnxDestroyOfflineRecognizerResult(result);
-        }
-        SherpaOnnxDestroyOfflineStream(stream);
         SherpaOnnxFreeWave(wave);
         
-        return transcription;
+        return fullTranscription.empty() ? "No speech detected" : fullTranscription;
     }
     
     bool IsInitialized() const {
-        return recognizer != nullptr;
+        return recognizer != nullptr && vad != nullptr;
     }
 };
 
 void PrintUsage(const char* programName) {
     std::cout << "Usage: " << programName << " <wav_file1> [wav_file2] ..." << std::endl;
     std::cout << "Example: " << programName << " recording_20250912_152706_microphone.wav recording_20250912_152706_system.wav" << std::endl;
-    std::cout << "The model files should be in: models/sherpa-onnx-moonshine-base-en-int8/" << std::endl;
+    std::cout << "The ASR model files should be in: models/sherpa-onnx-moonshine-base-en-int8/" << std::endl;
+    std::cout << "The VAD model file should be: models/silero_vad.int8.onnx" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -145,7 +224,8 @@ int main(int argc, char* argv[]) {
     
     // Initialize the transcription engine
     std::string modelDir = "models/sherpa-onnx-moonshine-base-en-int8";
-    TranscriptionEngine engine(modelDir);
+    std::string vadModelFile = "models/silero_vad.int8.onnx";
+    TranscriptionEngine engine(modelDir, vadModelFile);
     
     if (!engine.IsInitialized()) {
         std::cerr << "Failed to initialize transcription engine" << std::endl;
