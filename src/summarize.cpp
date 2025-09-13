@@ -191,6 +191,21 @@ int main(int argc, char* argv[]) {
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     
+    // Generate output filename by replacing "transcript" with "summary"
+    std::string outputFilename = filename;
+    size_t transcriptPos = outputFilename.find("transcript");
+    if (transcriptPos != std::string::npos) {
+        outputFilename.replace(transcriptPos, 9, "summary");
+    } else {
+        // If no "transcript" found, add "summary_" prefix
+        size_t lastSlash = outputFilename.find_last_of("/\\");
+        if (lastSlash != std::string::npos) {
+            outputFilename.insert(lastSlash + 1, "summary_");
+        } else {
+            outputFilename = "summary_" + outputFilename;
+        }
+    }
+    
     // Parse response - simple string parsing
     std::cout << "\n=== SUMMARY ===" << std::endl;
     
@@ -219,7 +234,20 @@ int main(int argc, char* argv[]) {
                 }
             }
             
-            std::cout << unescaped << std::endl;
+            // Write summary to file
+            std::ofstream outputFile(outputFilename);
+            if (outputFile.is_open()) {
+                outputFile << "=== AI Summary ===" << std::endl;
+                outputFile << "Generated: " << __DATE__ << " " << __TIME__ << std::endl;
+                outputFile << "Source: " << filename << std::endl;
+                outputFile << std::endl;
+                outputFile << unescaped << std::endl;
+                outputFile.close();
+                std::cout << "Summary saved to: " << outputFilename << std::endl;
+            } else {
+                std::cerr << "Error: Could not create output file " << outputFilename << std::endl;
+                std::cout << unescaped << std::endl;
+            }
         } else {
             std::cerr << "Error: Could not find end of text in response" << std::endl;
             std::cout << "Raw response: " << response_string << std::endl;
