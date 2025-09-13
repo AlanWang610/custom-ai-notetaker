@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add executables
 add_executable(record src/record.cpp)
 add_executable(transcribe src/transcribe_and_diarize.cpp)
+add_executable(summarize src/summarize.cpp)
 
 # Find libsamplerate
 find_library(SAMPLERATE_LIB 
@@ -186,6 +187,9 @@ if(WIN32)
     )
 endif()
 
+# Summarize executable uses simple string-based JSON (no external dependencies needed)
+# WinHTTP is built into Windows
+
 # Set output directory
 set_target_properties(record PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -195,11 +199,17 @@ set_target_properties(transcribe PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
+set_target_properties(summarize PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
 # Compiler-specific options
 if(MSVC)
     target_compile_options(record PRIVATE /W4)
     target_compile_options(transcribe PRIVATE /W4)
+    target_compile_options(summarize PRIVATE /W4)
 else()
     target_compile_options(record PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(transcribe PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(summarize PRIVATE -Wall -Wextra -Wpedantic)
 endif()
